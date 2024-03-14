@@ -1,0 +1,28 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@model List<EmployeeWorkHoursSum>
+
+<div class="text-center">
+    <div class="container">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Employee Name</th>
+                <th>Hours Worked</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var employeeHour in Model)
+            {
+                <tr>
+                    <td>@employeeHour.EmployeeName</td>
+                    <td style="@(employeeHour.HoursWorked <= 100 ? "background-color: red;" : "")">
+                            @employeeHour.HoursWorked.ToString("0.00")
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+</div>
