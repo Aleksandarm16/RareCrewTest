@@ -3,26 +3,130 @@
 }
 @model List<EmployeeWorkHoursSum>
 
-<div class="text-center">
-    <div class="container">
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Employee Name</th>
-                <th>Hours Worked</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var employeeHour in Model)
-            {
-                <tr>
-                    <td>@employeeHour.EmployeeName</td>
-                    <td style="@(employeeHour.HoursWorked <= 100 ? "background-color: red;" : "")">
-                            @employeeHour.HoursWorked.ToString("0.00")
-                    </td>
-                </tr>
+<div class="container-fluid">
+    <div class="row d-flex justify-content-between">
+        <div class="col-md-6">
+            <div class="text-center">
+                <h2>Employee Work Hours</h2>
+                <table class="table table-striped" style="margin-right: 20px;">
+                    <thead>
+                        <tr>
+                            <th>Employee Name</th>
+                            <th>Hours Worked</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var employeeHour in Model)
+                        {
+                            <tr>
+                                <td>@employeeHour.EmployeeName</td>
+                                <td style="@(employeeHour.HoursWorked <= 100 ? "background-color: red;" : "")">
+                                    @employeeHour.HoursWorked.ToString("0.00")
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-md-6" style="overflow:hidden">
+            <div >
+                <div class="d-flex justify-content-between">
+                    <h2>Hours Worked</h2>
+                    <button id="downloadChart" class="btn btn-primary">Download Pie Chart</button>
+                </div>
+                <div>
+                    <canvas id="pieChart" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.0.0/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script>
+        // setup
+        Chart.register(ChartDataLabels);
+        var labels = @Html.Raw(Json.Serialize(Model.Select(e => e.EmployeeName)));
+        var dataEmployee = @Html.Raw(Json.Serialize(Model.Select(e => e.HoursWorked)));
+        const data = {
+            labels: labels,
+            datasets: [{
+                label: 'Hours Worked',
+                data: dataEmployee,
+                backgroundColor: [
+                    'rgba(255, 26, 104, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                    'rgba(0, 0, 0, 0.2)'
+                ],
+                borderColor: [
+                    'rgba(255, 26, 104, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(0, 0, 0, 1)'
+                ],
+                borderWidth: 1
+            }]
+        };
+
+        // config
+        const config = {
+            type: 'pie',
+            data,
+            options: {
+                
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'right'
+                    },
+                    tooltip: {
+                        enabled:false
+                    },
+                    datalabels:{
+                        anchor: 'center',
+                        align: 'center',
+                        formatter: ((value, ctx) => {
+                            const totalSum = ctx.dataset.data.reduce((accumulator, currentValue) => {
+                                return accumulator + currentValue
+                            }, 0);
+                            var percentage = value / totalSum * 100;
+                            return `${percentage.toFixed(2)}%`;
+                        })
+                    }
+                }
             }
-        </tbody>
-    </table>
-</div>
-</div>
+        };
+
+        // render init block
+        const myChart = new Chart(
+            document.getElementById('pieChart'),
+            config
+        );
+
+        // Download Pie Chart as PNG
+        document.getElementById('downloadChart').addEventListener('click', function () {
+            var canvas = document.getElementById('pieChart');
+            var ctx = canvas.getContext('2d');           
+
+            // Generate data URL and initiate download
+            var dataURL = canvas.toDataURL('image/png');
+            var a = document.createElement('a');
+            a.href = dataURL;
+            a.download = 'pie_chart.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
+
+    </script>
+}
